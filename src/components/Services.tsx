@@ -58,7 +58,7 @@ const Services = () => {
       easing: "cubic-bezier(0.22, 1, 0.36, 1)",
       transition: true,
       gyroscope: false,
-      axis: "y",
+      axis: "y" as const,
     }),
     [],
   );
