@@ -1,7 +1,9 @@
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from "framer-motion";
 import { Scissors, Sparkles, Palette, Crown } from "lucide-react";
-import { useRef, MouseEvent } from "react";
+import { useRef, MouseEvent, TouchEvent } from "react";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 const services = [
   {
@@ -53,37 +55,37 @@ interface TiltCardProps {
 
 const TiltCard = ({ service, index }: TiltCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
 
-  // Mouse-based tilt
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Scroll-based tilt
   const { scrollYProgress } = useScroll({
     target: cardRef,
     offset: ["start end", "end start"],
   });
 
-  // Mouse rotations (max 15 degrees for more dramatic effect)
-  const mouseRotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
-  const mouseRotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
+  const tiltRange = prefersReducedMotion ? 0 : isMobile ? 6 : 15;
+  const scrollRange = prefersReducedMotion || isMobile ? 0 : 10;
 
-  // Scroll rotation (more tilt based on position)
-  const scrollRotateX = useTransform(scrollYProgress, [0, 0.5, 1], [10, 0, -10]);
-
-  // Combine mouse + scroll for X rotation
+  const mouseRotateX = useTransform(mouseY, [-0.5, 0.5], [tiltRange, -tiltRange]);
+  const mouseRotateY = useTransform(mouseX, [-0.5, 0.5], [-tiltRange, tiltRange]);
+  const scrollRotateX = useTransform(scrollYProgress, [0, 0.5, 1], [scrollRange, 0, -scrollRange]);
   const combinedRotateX = useTransform(
     [mouseRotateX, scrollRotateX],
     ([mouse, scroll]) => (mouse as number) + (scroll as number)
   );
 
-  // Spring smoothing (faster response for more dramatic feel)
-  const springConfig = { stiffness: 200, damping: 15, mass: 0.3 };
+  const springConfig = isMobile
+    ? { stiffness: 140, damping: 20, mass: 0.6 }
+    : { stiffness: 200, damping: 15, mass: 0.3 };
+
   const smoothRotateX = useSpring(combinedRotateX, springConfig);
   const smoothRotateY = useSpring(mouseRotateY, springConfig);
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || isMobile || prefersReducedMotion) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -92,6 +94,33 @@ const TiltCard = ({ service, index }: TiltCardProps) => {
   };
 
   const handleMouseLeave = () => {
+    if (isMobile || prefersReducedMotion) return;
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (!cardRef.current || !isMobile || prefersReducedMotion) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = (touch.clientX - rect.left) / rect.width - 0.5;
+    const y = (touch.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!cardRef.current || !isMobile || prefersReducedMotion) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = (touch.clientX - rect.left) / rect.width - 0.5;
+    const y = (touch.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMobile || prefersReducedMotion) return;
     mouseX.set(0);
     mouseY.set(0);
   };
@@ -103,46 +132,51 @@ const TiltCard = ({ service, index }: TiltCardProps) => {
       style={{ perspective: 1000 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{
         duration: 0.6,
         delay: index * 0.1,
-        ease: [0.25, 0.4, 0.25, 1]
+        ease: [0.25, 0.4, 0.25, 1],
       }}
     >
       <motion.div
-        className="salon-card p-8 h-full transform-gpu"
+        className="salon-card p-6 md:p-8 h-full transform-gpu cursor-default"
         style={{
           rotateX: smoothRotateX,
           rotateY: smoothRotateY,
           transformStyle: "preserve-3d",
         }}
       >
-        {/* Content with 3D depth */}
         <div style={{ transform: "translateZ(25px)", transformStyle: "preserve-3d" }}>
-          {/* Icon */}
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-6 mx-auto">
-            <service.icon className="w-6 h-6 text-primary" />
+          <div
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4 md:mb-6 mx-auto"
+            style={{ transform: "translateZ(20px)" }}
+          >
+            <service.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
           </div>
 
-          {/* Category */}
-          <h3 className="font-serif text-2xl text-foreground text-center mb-6">
+          <h3
+            className="font-serif text-xl md:text-2xl text-foreground text-center mb-4 md:mb-6"
+            style={{ transform: "translateZ(15px)" }}
+          >
             {service.category}
           </h3>
 
-          {/* Items */}
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4" style={{ transform: "translateZ(10px)" }}>
             {service.items.map((item) => (
               <div
                 key={item.name}
-                className="flex justify-between items-center border-b border-border pb-3"
+                className="flex justify-between items-center border-b border-border pb-2 md:pb-3"
               >
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-xs md:text-sm">
                   {item.name}
                 </span>
-                <span className="text-primary font-medium text-sm">
+                <span className="text-primary font-medium text-xs md:text-sm whitespace-nowrap ml-2">
                   {item.price}
                 </span>
               </div>
@@ -176,7 +210,7 @@ const Services = () => {
         </div>
 
         {/* Services Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {services.map((service, index) => (
             <TiltCard key={service.category} service={service} index={index} />
           ))}
