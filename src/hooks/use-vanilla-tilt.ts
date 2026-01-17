@@ -6,7 +6,7 @@ const useVanillaTilt = (options: TiltOptions) => {
 
   const setTiltRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return;
-    const element = node as HTMLVanillaTiltElement;
+    const element = node as unknown as HTMLVanillaTiltElement;
 
     if (!tiltNodes.current.includes(element)) {
       tiltNodes.current.push(element);
