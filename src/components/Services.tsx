@@ -54,18 +54,14 @@ interface TiltCardProps {
 const TiltCard = ({ service, index }: TiltCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   
-  // Mouse-based tilt
+  // Mouse-based tilt - raw values
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), {
-    stiffness: 150,
-    damping: 20,
-  });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), {
-    stiffness: 150,
-    damping: 20,
-  });
+  // Smooth spring for mouse tilt
+  const springConfig = { stiffness: 100, damping: 15, mass: 0.5 };
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), springConfig);
   
   // Scroll-based tilt
   const { scrollYProgress } = useScroll({
@@ -74,8 +70,8 @@ const TiltCard = ({ service, index }: TiltCardProps) => {
   });
   
   const scrollRotateX = useSpring(
-    useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [6, 2, 0, -2, -6]),
-    { stiffness: 100, damping: 30 }
+    useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [4, 1, 0, -1, -4]),
+    { stiffness: 80, damping: 20 }
   );
   
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -95,7 +91,7 @@ const TiltCard = ({ service, index }: TiltCardProps) => {
   return (
     <motion.div
       ref={cardRef}
-      className="h-full"
+      className="h-full perspective-1000"
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
@@ -104,39 +100,38 @@ const TiltCard = ({ service, index }: TiltCardProps) => {
         delay: index * 0.1,
         ease: [0.25, 0.4, 0.25, 1] 
       }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        perspective: 1000,
+      }}
     >
       <motion.div
-        className="salon-card p-8 h-full transform-gpu will-change-transform cursor-default"
+        className="salon-card p-8 h-full transform-gpu cursor-default"
         style={{
-          rotateX: scrollRotateX,
-          transformPerspective: 1000,
+          rotateX,
+          rotateY,
           transformStyle: "preserve-3d",
         }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
       >
         <motion.div
-          className="h-full"
           style={{
-            rotateX,
-            rotateY,
+            rotateX: scrollRotateX,
             transformStyle: "preserve-3d",
           }}
         >
           {/* Icon */}
-          <motion.div
+          <div
             className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-6 mx-auto"
-            style={{ translateZ: 30 }}
+            style={{ transform: "translateZ(20px)" }}
           >
             <service.icon className="w-6 h-6 text-primary" />
-          </motion.div>
+          </div>
 
           {/* Category */}
           <h3 
             className="font-serif text-2xl text-foreground text-center mb-6"
-            style={{ transform: "translateZ(20px)" }}
+            style={{ transform: "translateZ(15px)" }}
           >
             {service.category}
           </h3>
