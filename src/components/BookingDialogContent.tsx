@@ -8,17 +8,17 @@ import { cn } from "@/lib/utils";
 
 // Services
 const services = [
-  { id: "cut", name: "Haarschnitt", duration: 45, price: 45 },
-  { id: "color", name: "Färben", duration: 90, price: 85 },
-  { id: "styling", name: "Styling", duration: 30, price: 35 },
+  { id: "cut", nameKey: "services.bookingServices.cut", duration: 45, price: 45 },
+  { id: "color", nameKey: "services.bookingServices.color", duration: 90, price: 85 },
+  { id: "styling", nameKey: "services.bookingServices.styling", duration: 30, price: 35 },
 ];
 
 // Stylists
 const stylists = [
-  { id: "any", name: "Egal / Erste:r Freie:r", specialty: null },
-  { id: "sarah", name: "Sarah", specialty: "Schnitte & Braut" },
-  { id: "marco", name: "Marco", specialty: "Barbier" },
-  { id: "lisa", name: "Lisa", specialty: "Coloristin" },
+  { id: "any", nameKey: "team.bookingStylists.any", specialtyKey: null },
+  { id: "sarah", nameKey: "team.bookingStylists.sarah", specialtyKey: "team.bookingStylists.specialties.sarah" },
+  { id: "marco", nameKey: "team.bookingStylists.marco", specialtyKey: "team.bookingStylists.specialties.marco" },
+  { id: "lisa", nameKey: "team.bookingStylists.lisa", specialtyKey: "team.bookingStylists.specialties.lisa" },
 ];
 
 const formatDateKey = (date: Date) => {
@@ -134,7 +134,7 @@ const BookingDialogContent = () => {
       description: t("booking.labels.bookedDesc", {
         date: formatDateLabel(selectedDate),
         time: selectedTime,
-        stylist: stylist?.id !== "any" ? ` bei ${stylist?.name}` : ""
+        stylist: stylist?.id !== "any" ? ` bei ${t(stylist?.nameKey || "")}` : ""
       }),
     });
 
@@ -204,7 +204,7 @@ const BookingDialogContent = () => {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium text-foreground">{s.name}</p>
+                    <p className="font-medium text-foreground">{t(s.nameKey)}</p>
                     <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                       <Clock className="w-3 h-3" />
                       {t("booking.labels.duration", { duration: s.duration })}
@@ -247,10 +247,10 @@ const BookingDialogContent = () => {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">
-                        {s.id === "any" ? t("booking.labels.anyStylist") : s.name}
+                        {t(s.nameKey)}
                       </p>
-                      {s.specialty && (
-                        <p className="text-xs text-muted-foreground">{s.specialty}</p>
+                      {s.specialtyKey && (
+                        <p className="text-xs text-muted-foreground">{t(s.specialtyKey)}</p>
                       )}
                     </div>
                   </div>
@@ -330,7 +330,7 @@ const BookingDialogContent = () => {
                       })}
                     </div>
                     <p className="text-xs text-muted-foreground mt-2 text-center">
-                      Durchgestrichene Zeiten sind bereits vergeben
+                      {t("booking.labels.noTimes")}
                     </p>
                   </motion.div>
                 ) : (
@@ -356,20 +356,20 @@ const BookingDialogContent = () => {
             <div className="bg-secondary/50 rounded-lg p-4 mb-6">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">{t("booking.steps.service")}:</span>
-                <span className="font-medium">{service?.name}</span>
+                <span className="font-medium">{t(service?.nameKey || "")}</span>
               </div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">{t("booking.steps.stylist")}:</span>
-                <span className="font-medium">{stylist?.name}</span>
+                <span className="font-medium">{t(stylist?.nameKey || "")}</span>
               </div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">{t("booking.steps.date")}:</span>
                 <span className="font-medium">
-                  {selectedDate ? formatDateLabel(selectedDate) : ""}, {selectedTime} Uhr
+                  {selectedDate ? formatDateLabel(selectedDate) : ""}, {selectedTime} {t("booking.labels.timeSuffix")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Preis:</span>
+                <span className="text-muted-foreground">{t("booking.labels.price")}:</span>
                 <span className="font-medium text-primary">{service?.price}€</span>
               </div>
             </div>

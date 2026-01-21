@@ -55,12 +55,12 @@ const Contact = () => {
                   <div className="max-h-[calc(90vh-140px)] overflow-y-auto pr-1 md:pr-2">
                     <Tabs defaultValue="demo">
                       <TabsList className="w-full sm:w-auto">
-                        <TabsTrigger value="demo">Demo</TabsTrigger>
-                        <TabsTrigger value="zeeg">Zeeg</TabsTrigger>
+                        <TabsTrigger value="demo">{t("contact.tabs.demo")}</TabsTrigger>
+                        <TabsTrigger value="zeeg">{t("contact.tabs.zeeg")}</TabsTrigger>
                       </TabsList>
                       <TabsContent value="demo">
                         <p className="text-xs text-muted-foreground mb-3">
-                          Demo-Modus mit lokalen Beispieldaten (keine echten Buchungen).
+                          {t("contact.tabs.demoDesc")}
                         </p>
                         <BookingDialogContent />
                       </TabsContent>
